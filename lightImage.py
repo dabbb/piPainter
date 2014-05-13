@@ -1,7 +1,6 @@
-#import RPi.GPIO as GPIO\
 import Image, time
 
-class spidev:
+class spidev_stub:
     @staticmethod
     def write(col):
         strToDisplay =[]
@@ -125,8 +124,9 @@ class lightImage:
                          "1passeOff":allocate_1step_off,
                          "rouleau" :allocate_rouleau   }
 
-    def __init__(self, filename, lightBarLength, paintMethod = "1passeOn"):
+    def __init__(self, filename, lightBarLength, paintMethod = "1passeOn", delay = 0.001):
         self.filename = filename
+        self.delay = delay
         # Calculate gamma correction table.  This includes
         # LPD8806-specific conversion (7-bit color w/high bit set).
         for i in range(256):
@@ -136,6 +136,8 @@ class lightImage:
         self.load()
 
         self.alocateMethodDico[paintMethod](self)
+
+        
 
     def load(self):
         print "Loading..."
@@ -150,12 +152,13 @@ class lightImage:
 
     def paint_step(self):
         print "painting"
+        spidev    = file("/dev/spidev0.0", "wb")
 
         # print each collumn
         for x in range(self.width):
             spidev.write(self.step[self.currentStep][x])
             spidev.flush()
-            time.sleep(0.001)
+            time.sleep(self.delay)
 
         # switch to next pattern
         self.currentStep += 1

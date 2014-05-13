@@ -149,14 +149,21 @@ def onSelect():
             lcd.message(currentMenu.__str__())
         elif(mainChoice == "stop"):
             # quit script without halting
-            # piPaint("/home/pi/lightpaint/off.png")
+            # turn off bar
+            filename = "%s/off.png"%(pngDirName)
+            offImg = lightImage.lightImage(filename,32)
+            offImg.paint_step()
+
             lcd.clear()
             lcd.backlight(lcd.OFF)
             getout=1
             print "sortie"
         elif(mainChoice == "halt"):
-            # call(["halt", "-p"])
-            # piPaint("/home/pi/lightpaint/off.png")
+            call(["halt", "-p"])
+            # turn off bar
+            filename = "%s/off.png"%(pngDirName)
+            offImg = lightImage.lightImage(filename,32)
+            offImg.paint_step()
             lcd.clear()
             lcd.backlight(lcd.OFF)
             getout=1
@@ -191,7 +198,7 @@ def buttonProcess(button):
         # assign to button 1
         filename = "%s/%s.png"%(pngDirName,
                             configMenu.getParamVal(FILENAME_IDX))
-        button = lightImage.lightImage(filename,32,configMenu.getParamVal(MODE_IDX))
+        button = lightImage.lightImage(filename,32,configMenu.getParamVal(MODE_IDX),configMenu.getParamVal(DELAY_IDX))
     return button
 
 def onButton1():
