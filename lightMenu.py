@@ -139,7 +139,7 @@ class lightMenu:
                 returnStr.append(self.selectCharRight[param.selected])
             returnStr.append("\n")
 
-        return ''.join(returnStr);
+        return ''.join(returnStr)
 
     def getParamVal(self,paramIdx):
         return self.allParam[paramIdx[0]][paramIdx[1]].getVal()
