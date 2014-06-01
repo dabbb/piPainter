@@ -1,4 +1,4 @@
-import Image, time
+import Image, time, random
 
 class spidev_stub:
     @staticmethod
@@ -24,7 +24,7 @@ class lightImage:
 
     @staticmethod
     def listSupportedModes():
-        return ["1passeOn","1passeOff","flipflap","rouleau"]
+        return ["1runOn","1runOff","flipflap","rouleau","random"]
 
     def allocate_1step_on(self):
 
@@ -113,12 +113,57 @@ class lightImage:
             # off FOR THE LAST LINE
             for y in range(self.lightBarLength):
                 y3 = y * 3
-                self.step[0][self.width][y3] = 128
+                self.step[s][self.width][y3] = 128
                 self.step[s][self.width][y3 + 1] = 128
                 self.step[s][self.width][y3 + 2] = 128
 
         # to print the off column
         self.width = self.width + 1
+
+    def allocate_random(self):
+        # step of 32 pix (self.lightBarLength) each "nbstep" line
+
+        print "Allocating..."
+        self.currentStep = 0
+        self.nbStep = self.height // self.lightBarLength
+        self.step = []
+        # fill each step
+        for s in range(0,self.nbStep):
+
+            column = [0 for x in range(self.width + 1)]
+            self.step.append(column)
+            for x in range(self.width + 1):
+                self.step[s][x] = bytearray(self.lightBarLength * 3 + 1)
+
+            print "Converting..."
+
+            for x in range(self.width):
+                for y in range(self.lightBarLength):
+                    #print "%d,%d -> %d"%(x,y,self.height - (y + s*self.lightBarLength))
+                    randPart = random.randint(0,self.nbStep -1)
+                    #print "randPart : %d (%d -> %d)"%(randPart,0,self.nbStep -1)
+                    if(s%2 is 0):
+#                        print "normal print"
+                        value = self.pixels[x, self.height - 1 - (self.nbStep*y + randPart)]
+                    else:
+#                        print "reverse print"
+                        value = self.pixels[self.width - x - 1, self.height - 1 - (self.nbStep*y + randPart)]
+                    y3 = (y)* 3
+                    #print "%d,%d,%d"%(x,y,y3)
+                    self.step[s][x][y3] = self.gamma[value[1]]
+                    self.step[s][x][y3 + 1] = self.gamma[value[0]]
+                    self.step[s][x][y3 + 2] = self.gamma[value[2]]
+
+            # off FOR THE LAST LINE
+            for y in range(self.lightBarLength):
+                y3 = y * 3
+                self.step[s][self.width][y3] = 128
+                self.step[s][self.width][y3 + 1] = 128
+                self.step[s][self.width][y3 + 2] = 128
+
+        # to print the off column
+        self.width = self.width + 1
+
 
     def allocate_flipflap(self):
         # step of 32 pix (self.lightBarLength) each "nbstep" line
@@ -155,7 +200,7 @@ class lightImage:
             # off FOR THE LAST LINE
             for y in range(self.lightBarLength):
                 y3 = y * 3
-                self.step[0][self.width][y3] = 128
+                self.step[s][self.width][y3] = 128
                 self.step[s][self.width][y3 + 1] = 128
                 self.step[s][self.width][y3 + 2] = 128
 
@@ -163,12 +208,13 @@ class lightImage:
         self.width = self.width + 1
 
 
-    alocateMethodDico = {"1passeOn" :allocate_1step_on,
-                         "1passeOff":allocate_1step_off,
+    alocateMethodDico = {"1runOn" :allocate_1step_on,
+                         "1runOff":allocate_1step_off,
                          "rouleau"  :allocate_rouleau,
-                         "flipflap" :allocate_flipflap}
+                         "flipflap" :allocate_flipflap,
+                         "random":allocate_random}
 
-    def __init__(self, filename, lightBarLength, paintMethod = "1passeOn", delay = 0.001):
+    def __init__(self, filename, lightBarLength, paintMethod = "1runOn", delay = 0.001):
         self.filename = filename
         self.delay = delay
         # Calculate gamma correction table.  This includes
@@ -196,8 +242,8 @@ class lightImage:
 
     def paint_step(self):
         print "painting"
-        spidev    = file("/dev/spidev0.0", "wb")
-
+        #spidev    = file("/dev/spidev0.0", "wb")
+        spidev    = spidev_stub()
         # print each collumn
         for x in range(self.width):
             spidev.write(self.step[self.currentStep][x])
@@ -209,7 +255,7 @@ class lightImage:
         self.currentStep %= self.nbStep
 
 if __name__ == "__main__":
-    i1= lightImage("png/joconde64.png",32,"flipflap")
+    i1= lightImage("png/off.png",32,"random")
 #    i1= lightImage("png/joconde.png",32,"1passeOn")
     i1.paint_step()
     i1.paint_step()
