@@ -1,4 +1,4 @@
 piPainter
 =========
 
-light painting using the raspberry pi
+ light painting using the raspberry pi
